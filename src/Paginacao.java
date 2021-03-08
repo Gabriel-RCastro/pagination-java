@@ -1,10 +1,12 @@
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 public class Paginacao {
     private int quantidadePorPagina;
-    private List<?> itens;
-    private BiConsumer<List<?>, Integer> consumer;
+    private int totalDeItens;
+    private Function<Integer, List<?>> consulta;
+    private BiConsumer<List<?>, Integer> executa;
 
     public Paginacao() {
     }
@@ -14,25 +16,26 @@ public class Paginacao {
         return this;
     }
 
-    public Paginacao itens(List<?> itens) {
-        this.itens = itens;
+    public Paginacao itens(int totalDeItens) {
+        this.totalDeItens = totalDeItens;
         return this;
     }
 
-    public Paginacao executarCadaPagina(BiConsumer<List<?>, Integer> consumer) {
-        this.consumer = consumer;
+    public Paginacao consultar(Function<Integer, List<?>> consulta) {
+        this.consulta = consulta;
+        return this;
+    }
+
+    public Paginacao executarCadaPagina(BiConsumer<List<?>, Integer> executa) {
+        this.executa = executa;
         return this;
     }
 
     public void paginar() {
-        var totalDeItens = itens.size();
         var totalDePaginas = quantidadePorPagina > 0 ? (totalDeItens - 1) / quantidadePorPagina + 1 : 0;
         for (int i = 0; i < totalDePaginas; i++) {
-            var inicio = i * quantidadePorPagina;
-            var fim = (i + 1) * quantidadePorPagina;
-            if (fim > totalDeItens) fim = totalDeItens;
-            var listaDeResultados = itens.subList(inicio, fim);
-            this.consumer.accept(listaDeResultados, i);
+            var listaDeResultados = this.consulta.apply(i);
+            this.executa.accept(listaDeResultados, i);
         }
     }
 }
